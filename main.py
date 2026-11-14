@@ -8,7 +8,7 @@ API_HASH = os.getenv("API_HASH", "61e4a7c1b861b141eede9901dbf6935b")
 SESSION_STRING = os.getenv("SESSION_STRING")
 
 SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL", "@XAUUSD_GOLD_TRADING_FOREX")
-TARGET_CHANNEL = os.getenv("TARGET_CHANNEL", "@TradeXManagement")
+TARGET_CHANNEL = os.getenv("TARGET_CHANNEL", "@fxxauusdelite")
 CUSTOM_CONTACT = os.getenv("CUSTOM_FOOTER", "@Mr_tradern")
 
 if not SESSION_STRING:
