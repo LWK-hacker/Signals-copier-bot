@@ -7,7 +7,7 @@ API_ID = 33698486
 API_HASH = "61e4a7c1b861b141eede9901dbf6935b"
 SESSION_STRING = os.getenv("SESSION_STRING")
 
-SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL", "@forexg")
+SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL", "@XAUUSD_GOLD_TRADING_FOREX")
 TARGET_CHANNEL = os.getenv("TARGET_CHANNEL", "@fxxauusdelite")
 CUSTOM_CONTACT = os.getenv("CUSTOM_FOOTER", "@Mr_tradern")
 
@@ -22,27 +22,21 @@ async def handler(event):
     try:
         text = event.raw_text or ""
         
-        # 1. Strict Link & Promotion Filter:
-        # Agar message mein t.me link ya website hai, toh hum check karenge ke yeh valid trading signal hai ya nahi.
-        if re.search(r'(?:https?://|www\.|t\.me/|telegram\.me/|join|subscribe|vip channel|screenshots to)', text, flags=re.IGNORECASE):
-            # Sirf tab allow karein jab message ke andar proper trading signal ke lafz (TP, SL, Entry) mojood hon
-            is_valid_signal = ("TP" in text or "SL" in text or "ENTRY" in text or "BUY" in text or "SELL" in text)
-            if not is_valid_signal:
-                return  # Agar signal nahi hai aur sirf link/promotion hai (jaise screenshot wala msg), toh poora skip ho jaye ga!
-
-        # 2. Smart Contact Replacement:
-        has_contact = bool(re.search(r'(@\w+|\bcontact\b|\badmin\b|\bmanager\b)', text, flags=re.IGNORECASE))
+        # Check karein ke message mein koi link ya contact mojood hai ya nahi
+        has_link_or_contact = bool(re.search(r't\.me/|telegram\.me/|@\w+|\bcontact\b', text, flags=re.IGNORECASE))
         
-        if has_contact:
-            # Purane usernames/contacts hata kar apna contact set karein
-            text = re.sub(r'@\w+', CUSTOM_CONTACT, text)
-            text = re.sub(r'(?:Contact|Admin|Manager)[\s:]*@?\w+', f"Contact: {CUSTOM_CONTACT}", text, flags=re.IGNORECASE)
+        if has_link_or_contact:
+            # Sabhi external t.me links, websites aur purane usernames ko remove kar do
+            text = re.sub(r'https?://\S+|www\.\S+|t\.me/\S+|telegram\.me/\S+', '', text, flags=re.IGNORECASE)
+            text = re.sub(r'@\w+', '', text)
             
-            if CUSTOM_CONTACT not in text and text:
+            # Extra khali lines saaf karna
+            text = re.sub(r'\n\s*\n', '\n\n', text).strip()
+            
+            # Sirf ek jagah end mein aapka contact add kar dena
+            if CUSTOM_CONTACT not in text:
                 text += f"\n\nContact: {CUSTOM_CONTACT}"
         
-        # Baqi saare fazool links ya t.me links ko saaf/remove karna
-        text = re.sub(r'https?://\S+|www\.\S+|t\.me/\S+|telegram\.me/\S+', '', text, flags=re.IGNORECASE)
         text = text.strip()
         
         if not text and not event.media:
@@ -57,6 +51,6 @@ async def handler(event):
     except Exception as e:
         print(f"Error: {e}")
 
-print("Bot is running with strict promotion filtering...")
+print("Bot is running with clean single-contact replacement logic...")
 client.start()
 client.run_until_disconnected()
