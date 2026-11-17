@@ -3,8 +3,8 @@ import re
 from telethon import TelegramClient, events
 from telethon.sessions import StringSession
 
-API_ID = int(os.getenv("API_ID", "33698486"))
-API_HASH = os.getenv("API_HASH", "61e4a7c1b861b141eede9901dbf6935b")
+API_ID = 33698486
+API_HASH = "61e4a7c1b861b141eede9901dbf6935b"
 SESSION_STRING = os.getenv("SESSION_STRING")
 
 SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL", "@forexg")
@@ -23,8 +23,7 @@ async def handler(event):
         text = event.raw_text or ""
         
         # 1. Agar message mein koi doosra channel link ya promotion ho, toh poora ignore kar do
-        if re.search(r'(?:https?://|www\.|t\.me/|telegram\.me/|join|subscribe|vip channel)', text, flags=re.IGNORECASE):
-            # Agar signal ke andar t.me link hai lekin sath TP/SL/ENTRY hai toh allow karein, warna skip
+        if text and re.search(r'(?:https?://|www\.|t\.me/|telegram\.me/|join|subscribe|vip channel)', text, flags=re.IGNORECASE):
             if not ("t.me/" in text and ("TP" in text or "SL" in text or "ENTRY" in text)):
                 return
 
@@ -32,25 +31,21 @@ async def handler(event):
         has_contact = bool(re.search(r'(@\w+|\bcontact\b|\badmin\b|\bmanager\b)', text, flags=re.IGNORECASE))
         
         if has_contact:
-            # Purane usernames/contacts hata kar apna contact set karein
             text = re.sub(r'@\w+', CUSTOM_CONTACT, text)
             text = re.sub(r'(?:Contact|Admin|Manager)[\s:]*@?\w+', f"Contact: {CUSTOM_CONTACT}", text, flags=re.IGNORECASE)
             
-            # Agar footer mein contact nahi hai toh end mein add kar dein
-            if CUSTOM_CONTACT not in text:
+            if CUSTOM_CONTACT not in text and text:
                 text += f"\n\nContact: {CUSTOM_CONTACT}"
-        else:
-            # Agar message mein pehle se koi contact nahi tha, toh apni taraf se nahi lagana
-            pass
-
-        # Baqi fazool links ya phone numbers saaf karna
+        
+        # Baqi fazool links saaf karna
         text = re.sub(r'https?://\S+|www\.\S+', '', text)
         text = text.strip()
         
-        if not text:
+        # Agar na text ho aur na hi koi media, tab hi return karna hai (Round videos aur media-only posts ab miss nahi hongi)
+        if not text and not event.media:
             return
 
-        # Target channel par bhejna
+        # Target channel par bhejna (Media + Text dono handle honge)
         if event.media:
             await client.send_file(TARGET_CHANNEL, event.media, caption=text)
         elif text:
@@ -59,6 +54,6 @@ async def handler(event):
     except Exception as e:
         print(f"Error: {e}")
 
-print("Bot is running with refined link/contact filters...")
+print("Bot is running with media & round video support...")
 client.start()
 client.run_until_disconnected()
